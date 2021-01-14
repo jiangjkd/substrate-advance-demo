@@ -270,7 +270,10 @@ impl<T: Trait> Module<T> {
 mod tests {
     use super::*;
     use sp_core::H256;
-    use frame_support::{impl_outer_origin, parameter_types, weights::Weight, assert_ok, assert_noop,
+    use frame_support::{
+        impl_outer_event,
+        impl_outer_origin, 
+        parameter_types, weights::Weight, assert_ok, assert_noop,
                         traits::{OnFinalize, OnInitialize},
     };
     use sp_runtime::{
@@ -281,6 +284,18 @@ mod tests {
 
     impl_outer_origin! {
 	    pub enum Origin for Test {}
+    }
+
+    mod kitties_event {
+        pub use crate::Event;
+    }
+
+    impl_outer_event! {
+        pub enum TestEvent for Test {
+            frame_system<T>, //??
+            kitties_event<T>, //??
+            balances<T>, //??
+        }
     }
 
 
@@ -303,7 +318,7 @@ mod tests {
         type AccountId = u64;
         type Lookup = IdentityLookup<Self::AccountId>;
         type Header = Header;
-        type Event = ();
+        type Event = TestEvent;
         type BlockHashCount = BlockHashCount;
         type MaximumBlockWeight = MaximumBlockWeight;
         type DbWeight = ();
@@ -329,7 +344,7 @@ mod tests {
         /// The type for recording an account's balance.
         type Balance = Balance;
         /// The ubiquitous event type.
-        type Event = ();
+        type Event = TestEvent;
         type DustRemoval = ();
         type ExistentialDeposit = ExistentialDeposit;
         type AccountStore = frame_system::Module<Test>;
@@ -341,7 +356,7 @@ mod tests {
         pub const NewKittyReserve: u64 = 5_000;
     }
      impl Trait for Test {
-        type Event = ();
+        type Event = TestEvent;
         type Randomness = Randomness;
         type KittyIndex = u32;
         type NewKittyReserve = NewKittyReserve;
@@ -379,7 +394,11 @@ mod tests {
     fn owned_kitties_can_append_values() {
         new_test_ext().execute_with(|| {
             run_to_block(10);
-            assert_eq!(Kitties::create(Origin::signed(1)), Ok(()))
+            // assert_eq!(Kitties::create(Origin::signed(1)), Ok(()));
+            assert_ok!(Kitties::create(Origin::signed(1)));
+            assert_eq!(
+            System::events()[1].event,
+            TestEvent::kitties_event(Event::<Test>::Created(1u64, 0)))
         })
     }
 
