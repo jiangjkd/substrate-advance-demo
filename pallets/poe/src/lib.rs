@@ -6,7 +6,7 @@
 
 use frame_support::{decl_module, decl_storage, decl_event, decl_error, ensure, dispatch, traits::Get, sp_std::prelude::*};
 use frame_system::{ self as system, ensure_signed };
-
+use pallet_timestamp::{ self as timestamp};
 
 #[cfg(test)]
 mod mock;
@@ -17,7 +17,7 @@ mod tests;
 /// Configure the pallet by specifying the parameters and types on which it depends.
 //所有runtime类型和常量都放在这里。 
 //如果此pallet依赖于其他特定的pallet，则应将依赖pallet的配置trait添加到继承的trait列表中。
-pub trait Trait: system::Trait {
+pub trait Trait: system::Trait + timestamp::Trait {
 	type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
     type MaxClaimLength: Get<u16>;
 }
@@ -119,5 +119,12 @@ decl_module! {
             Proofs::<T>::insert(&claim, (dest, system::Module::<T>::block_number()));
             Ok(())
         }
+
+        #[weight = 0]
+		pub fn get_time(origin) -> dispatch::DispatchResult {
+			let _sender = ensure_signed(origin)?;
+			let _now = <timestamp::Module<T>>::get();
+			Ok(())
+		}
 	}
 }
